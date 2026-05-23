@@ -1,0 +1,100 @@
+{
+  "name": "openclaw-whatsapp-cloud",
+  "version": "0.1.0",
+  "description": "Native OpenClaw channel plugin for WhatsApp via Meta Cloud API direct (no BSP, no Baileys phone keep-alive)",
+  "author": "valkyriweb",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./api": {
+      "types": "./dist/api.d.ts",
+      "default": "./dist/api.js"
+    },
+    "./setup-entry": {
+      "types": "./dist/setup-entry.d.ts",
+      "default": "./dist/setup-entry.js"
+    },
+    "./openclaw.plugin.json": "./openclaw.plugin.json"
+  },
+  "bin": {
+    "openclaw-whatsapp-cloud": "./dist/cli/index.js"
+  },
+  "keywords": [
+    "openclaw",
+    "openclaw-plugin",
+    "openclaw-channel",
+    "whatsapp",
+    "whatsapp-cloud-api",
+    "meta",
+    "bot"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/valkyriweb/openclaw-whatsapp-cloud.git"
+  },
+  "bugs": {
+    "url": "https://github.com/valkyriweb/openclaw-whatsapp-cloud/issues"
+  },
+  "homepage": "https://github.com/valkyriweb/openclaw-whatsapp-cloud#readme",
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "dist/**/*.js",
+    "dist/**/*.d.ts",
+    "dist/**/*.js.map",
+    "dist/**/*.d.ts.map",
+    "openclaw.plugin.json"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "npm run clean && npm run build",
+    "test": "node --import tsx --test $(find test -name '*.test.ts')",
+    "test:watch": "node --import tsx --test --watch $(find test -name '*.test.ts')",
+    "check:pack": "npm run build && npm pack --dry-run"
+  },
+  "peerDependencies": {
+    "openclaw": ">=2026.5.19"
+  },
+  "peerDependenciesMeta": {
+    "openclaw": { "optional": true }
+  },
+  "dependencies": {
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2",
+    "@types/node": "^22.10.0",
+    "typescript": "^5.6.0"
+  },
+  "openclaw": {
+    "extensions": [
+      "./dist/index.js"
+    ],
+    "setupEntry": "./dist/setup-entry.js",
+    "channel": {
+      "id": "whatsapp-cloud",
+      "label": "WhatsApp (Cloud API)",
+      "selectionLabel": "WhatsApp via Meta Cloud API",
+      "docsPath": "/channels/whatsapp-cloud",
+      "docsLabel": "whatsapp-cloud",
+      "blurb": "WhatsApp Business via Meta Cloud API direct — no phone keep-alive, REST sends, HMAC-signed webhooks.",
+      "order": 71,
+      "quickstartAllowFrom": true
+    },
+    "install": {
+      "npmSpec": "openclaw-whatsapp-cloud",
+      "localPath": "extensions/whatsapp-cloud",
+      "defaultChoice": "npm"
+    }
+  }
+}

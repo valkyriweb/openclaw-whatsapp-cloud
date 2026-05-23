@@ -1,0 +1,114 @@
+{
+  "id": "whatsapp-cloud",
+  "channels": ["whatsapp-cloud"],
+  "channelConfigs": {
+    "whatsapp-cloud": {
+      "label": "WhatsApp (Cloud API)",
+      "description": "WhatsApp Business via Meta Cloud API direct — no phone keep-alive, REST sends, HMAC-signed webhooks. Coexists with the Baileys-based @openclaw/whatsapp plugin under a distinct channel id.",
+      "uiHints": {
+        "order": 71,
+        "docsPath": "/channels/whatsapp-cloud",
+        "docsLabel": "whatsapp-cloud",
+        "selectionLabel": "WhatsApp via Meta Cloud API",
+        "quickstartAllowFrom": true
+      },
+      "schema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "accessToken": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Meta System User access token (Bearer). Scopes: whatsapp_business_messaging + whatsapp_business_management."
+          },
+          "phoneNumberId": {
+            "type": "string",
+            "pattern": "^[0-9]+$",
+            "description": "Digits-only Meta phone_number_id for the WABA-registered number."
+          },
+          "appSecret": {
+            "type": "string",
+            "minLength": 8,
+            "description": "Meta App Secret. Used to HMAC-verify inbound webhooks (X-Hub-Signature-256)."
+          },
+          "verifyToken": {
+            "type": "string",
+            "minLength": 8,
+            "description": "Free-form verify token you choose; echoed on Meta's webhook subscribe handshake."
+          },
+          "wabaId": {
+            "type": "string",
+            "pattern": "^[0-9]+$",
+            "description": "WhatsApp Business Account id. Required to list approved templates."
+          },
+          "apiBaseUrl": {
+            "type": "string",
+            "format": "uri",
+            "description": "Override the Graph API base. Defaults to https://graph.facebook.com."
+          },
+          "apiVersion": {
+            "type": "string",
+            "pattern": "^v\\d+\\.\\d+$",
+            "description": "Override the Graph API version. Defaults to v25.0."
+          },
+          "enabled": { "type": "boolean" },
+          "name": { "type": "string" },
+          "accounts": {
+            "type": "object",
+            "description": "Multi-account map keyed by accountId. Each sub-account inherits top-level fields and overlays its own.",
+            "additionalProperties": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "accessToken": { "type": "string", "minLength": 1 },
+                "phoneNumberId": { "type": "string", "pattern": "^[0-9]+$" },
+                "appSecret": { "type": "string", "minLength": 8 },
+                "verifyToken": { "type": "string", "minLength": 8 },
+                "wabaId": { "type": "string", "pattern": "^[0-9]+$" },
+                "apiBaseUrl": { "type": "string", "format": "uri" },
+                "apiVersion": { "type": "string", "pattern": "^v\\d+\\.\\d+$" },
+                "enabled": { "type": "boolean" },
+                "name": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "configSchema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "accessToken": { "type": "string", "minLength": 1 },
+      "phoneNumberId": { "type": "string", "pattern": "^[0-9]+$" },
+      "appSecret": { "type": "string", "minLength": 8 },
+      "verifyToken": { "type": "string", "minLength": 8 },
+      "wabaId": { "type": "string", "pattern": "^[0-9]+$" },
+      "apiBaseUrl": { "type": "string", "format": "uri" },
+      "apiVersion": { "type": "string", "pattern": "^v\\d+\\.\\d+$" },
+      "enabled": { "type": "boolean" },
+      "name": { "type": "string" },
+      "accounts": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "accessToken": { "type": "string", "minLength": 1 },
+            "phoneNumberId": { "type": "string", "pattern": "^[0-9]+$" },
+            "appSecret": { "type": "string", "minLength": 8 },
+            "verifyToken": { "type": "string", "minLength": 8 },
+            "wabaId": { "type": "string", "pattern": "^[0-9]+$" },
+            "apiBaseUrl": { "type": "string", "format": "uri" },
+            "apiVersion": { "type": "string", "pattern": "^v\\d+\\.\\d+$" },
+            "enabled": { "type": "boolean" },
+            "name": { "type": "string" }
+          }
+        }
+      }
+    }
+  }
+}

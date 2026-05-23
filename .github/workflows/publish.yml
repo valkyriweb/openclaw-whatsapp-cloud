@@ -1,0 +1,75 @@
+name: Publish
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: npm-publish
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+          cache: npm
+
+      - name: Update npm for trusted publishing
+        run: npm install -g npm@11.6.2
+
+      - name: Validate tag is reachable from main
+        env:
+          TAG_SHA: ${{ github.sha }}
+        run: |
+          git fetch origin main
+          if ! git merge-base --is-ancestor "$TAG_SHA" origin/main; then
+            echo "Refusing to publish — tagged commit is not reachable from origin/main." >&2
+            exit 1
+          fi
+
+      - name: Validate tag matches package.json version
+        env:
+          TAG_NAME: ${{ github.ref_name }}
+        run: |
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          EXPECTED="v${PKG_VERSION}"
+          if [ "$TAG_NAME" != "$EXPECTED" ]; then
+            echo "Tag does not match package.json version" >&2
+            exit 1
+          fi
+
+      - name: Verify pack contents
+        run: |
+          PACK_OUTPUT=$(npm pack --dry-run --json)
+          echo "$PACK_OUTPUT" | node -e "
+            const data = JSON.parse(require('fs').readFileSync(0, 'utf8'));
+            const files = data[0].files.map(f => f.path);
+            const forbidden = files.filter(f =>
+              f.startsWith('test/') ||
+              f.startsWith('.github/') ||
+              f === 'CONTRIBUTING.md' ||
+              f === 'CODE_OF_CONDUCT.md' ||
+              f === 'SECURITY.md' ||
+              f === 'BLOCKERS.md' ||
+              f === 'CODE_REVIEW.md' ||
+              f === 'tsconfig.json'
+            );
+            if (forbidden.length) {
+              console.error('Forbidden files in pack:', forbidden);
+              process.exit(1);
+            }
+            console.log('Pack OK:', files.length, 'files');
+          "
+
+      - run: npm ci
+      - run: npm test
+      - run: npm publish --access public --provenance
