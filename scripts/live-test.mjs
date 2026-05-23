@@ -28,8 +28,71 @@ import {
   createCloudClient,
   createCloudWebhookHandler,
   IdempotencyCache,
-  loadWebhookIngressSdk,
 } from "../dist/api.js";
+
+/**
+ * Inline shim of openclaw/plugin-sdk/webhook-ingress — covers exactly what
+ * createCloudWebhookHandler needs so the harness runs without a host openclaw
+ * install. The real gateway threads in the live SDK; tests use a stub; the
+ * harness uses this. Same surface.
+ */
+class BodyTooLargeError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = "BodyTooLargeError";
+  }
+}
+
+const sdk = {
+  applyBasicWebhookRequestGuards: ({ req, res, allowMethods, requireJsonContentType }) => {
+    if (allowMethods && !allowMethods.includes(req.method ?? "")) {
+      res.statusCode = 405;
+      res.end("method not allowed");
+      return false;
+    }
+
+    if (requireJsonContentType) {
+      const contentType = String(req.headers["content-type"] ?? "").toLowerCase();
+      if (!contentType.includes("application/json")) {
+        res.statusCode = 415;
+        res.end("unsupported media type");
+        return false;
+      }
+    }
+
+    return true;
+  },
+  readRequestBodyWithLimit: (req, { maxBytes, timeoutMs = 30_000, encoding = "utf8" }) =>
+    new Promise((resolve, reject) => {
+      let total = 0;
+      const chunks = [];
+      const timeout = setTimeout(() => {
+        req.destroy();
+        reject(new Error("body read timeout"));
+      }, timeoutMs);
+
+      req.on("data", (chunk) => {
+        total += chunk.length;
+        if (total > maxBytes) {
+          clearTimeout(timeout);
+          req.destroy();
+          reject(new BodyTooLargeError(`body exceeds ${maxBytes} bytes`));
+          return;
+        }
+        chunks.push(chunk);
+      });
+      req.on("end", () => {
+        clearTimeout(timeout);
+        resolve(Buffer.concat(chunks).toString(encoding));
+      });
+      req.on("error", (error) => {
+        clearTimeout(timeout);
+        reject(error);
+      });
+    }),
+  isRequestBodyLimitError: (err) => err instanceof BodyTooLargeError,
+  requestBodyErrorToText: (err) => (err instanceof Error ? err.message : String(err)),
+};
 
 const required = ["WA_ACCESS_TOKEN", "WA_PHONE_NUMBER_ID", "WA_APP_SECRET", "WA_VERIFY_TOKEN"];
 const missing = required.filter((k) => !process.env[k]);
@@ -45,12 +108,6 @@ const accountConfig = {
   verifyToken: process.env.WA_VERIFY_TOKEN,
 };
 const port = Number(process.env.WA_PORT ?? 8787);
-
-const sdk = await loadWebhookIngressSdk();
-if (!sdk) {
-  console.error("could not load openclaw/plugin-sdk/webhook-ingress — is `openclaw` installed?");
-  process.exit(3);
-}
 
 const client = createCloudClient(accountConfig);
 const idempotency = new IdempotencyCache(1000);
