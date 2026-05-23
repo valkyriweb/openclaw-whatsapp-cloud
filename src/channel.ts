@@ -58,7 +58,7 @@ interface OpenclawWebhookIngressSdk {
 }
 
 let sdkPromise: Promise<OpenclawWebhookIngressSdk | null> | null = null;
-async function loadWebhookIngressSdk(): Promise<OpenclawWebhookIngressSdk | null> {
+export async function loadWebhookIngressSdk(): Promise<OpenclawWebhookIngressSdk | null> {
   if (sdkPromise) return sdkPromise;
   sdkPromise = (async () => {
     try {

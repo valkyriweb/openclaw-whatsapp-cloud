@@ -8,7 +8,8 @@ export {
   DEFAULT_ACCOUNT_ID,
 } from "./src/accounts.js";
 
-export { cloudPlugin } from "./src/channel.js";
+export { cloudPlugin, loadWebhookIngressSdk } from "./src/channel.js";
+export { createCloudWebhookHandler } from "./src/webhook-handler.js";
 export { cloudSetupPlugin, cloudWebhookUrl } from "./src/setup-core.js";
 export {
   CloudAccountSchema,
