@@ -1,6 +1,6 @@
 {
   "name": "openclaw-whatsapp-cloud",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Native OpenClaw channel plugin for WhatsApp via Meta Cloud API direct (no BSP, no Baileys phone keep-alive)",
   "author": "valkyriweb",
   "license": "MIT",
