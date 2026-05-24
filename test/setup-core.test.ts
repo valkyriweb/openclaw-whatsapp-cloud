@@ -1,6 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 
+import setupEntry, { setupChannelPlugin } from "../setup-entry.js";
 import { cloudSetupPlugin, cloudWebhookUrl, validateAnswers } from "../src/setup-core.js";
 
 describe("cloudWebhookUrl", () => {
@@ -40,5 +41,14 @@ describe("cloudSetupPlugin shape", () => {
     for (const k of ["accessToken", "phoneNumberId", "appSecret", "verifyToken"]) {
       assert.ok(keys.includes(k), `missing question: ${k}`);
     }
+  });
+
+  it("exports a full channel plugin for OpenClaw's read-only setup loader", () => {
+    assert.equal(setupChannelPlugin.id, "whatsapp-cloud");
+    assert.equal(typeof setupChannelPlugin.config.listAccountIds, "function");
+    assert.equal(typeof setupChannelPlugin.config.resolveAccount, "function");
+    assert.equal(typeof setupChannelPlugin.outbound?.sendText, "function");
+
+    assert.deepEqual(setupEntry, { plugin: setupChannelPlugin });
   });
 });

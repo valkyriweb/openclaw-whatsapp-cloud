@@ -5,9 +5,15 @@
  * we export the setup plugin directly and the host adapts.
  */
 
+import { cloudPlugin } from "./src/channel.js";
 import { cloudSetupPlugin } from "./src/setup-core.js";
 
 export { cloudSetupPlugin };
+
+export const setupChannelPlugin = {
+  ...cloudPlugin,
+  setupWizard: cloudSetupPlugin.setupWizard,
+};
 
 let defineSetupPluginEntry: ((plugin: unknown) => unknown) | undefined;
 try {
@@ -19,5 +25,5 @@ try {
 }
 
 export default defineSetupPluginEntry
-  ? defineSetupPluginEntry(cloudSetupPlugin)
-  : cloudSetupPlugin;
+  ? defineSetupPluginEntry(setupChannelPlugin)
+  : { plugin: setupChannelPlugin };
