@@ -46,6 +46,9 @@ export interface NormalizedInboundMessage {
   /** Meta media id. URL is not in the webhook — call `fetchMediaMetadata` then `downloadMediaBytes`. */
   mediaId?: string;
   mediaMimeType?: string;
+  filename?: string;
+  forwarded?: boolean;
+  location?: { latitude: number; longitude: number; name?: string; address?: string };
   /** Quoted message id (`context.id` in the Meta payload). */
   replyToMessageId?: string;
   raw: unknown;
