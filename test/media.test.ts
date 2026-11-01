@@ -1,7 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 
-import { downloadMediaBytes, fetchMediaMetadata } from "../src/media.js";
+import { downloadMediaBytes, fetchMediaMetadata, uploadMedia } from "../src/media.js";
 import type { CloudAccountConfig } from "../src/types.js";
 
 const account: CloudAccountConfig = {
@@ -10,6 +10,32 @@ const account: CloudAccountConfig = {
   appSecret: "appSecret123",
   verifyToken: "verifyToken12",
 };
+
+describe("uploadMedia", () => {
+  it("uploads the exact bytes and metadata to the account media endpoint", async () => {
+    const fakeFetch: typeof fetch = async (url, init) => {
+      assert.equal(String(url), "https://graph.facebook.com/v25.0/123456789012345/media");
+      assert.equal(init?.method, "POST");
+      assert.deepEqual(init?.headers, { Authorization: "Bearer EAAG..." });
+      assert.ok(init?.body instanceof FormData);
+      assert.equal(init.body.get("messaging_product"), "whatsapp");
+      assert.equal(init.body.get("type"), "audio/ogg");
+      const file = init.body.get("file");
+      assert.ok(file instanceof File);
+      assert.equal(file.name, "voice.ogg");
+      assert.equal(file.type, "audio/ogg");
+      assert.deepEqual([...new Uint8Array(await file.arrayBuffer())], [1, 2, 3]);
+      return Response.json({ id: "media-123" });
+    };
+    assert.deepEqual(await uploadMedia({ bytes: new Uint8Array([1, 2, 3]), mimeType: "audio/ogg", filename: "voice.ogg", account, fetch: fakeFetch }), { mediaId: "media-123" });
+  });
+
+  it("rejects failed uploads and successful responses without an id", async () => {
+    const input = { bytes: new Uint8Array(), mimeType: "audio/ogg", filename: "voice.ogg", account };
+    await assert.rejects(uploadMedia({ ...input, fetch: async () => new Response("error", { status: 401 }) }), /HTTP 401/);
+    await assert.rejects(uploadMedia({ ...input, fetch: async () => Response.json({}) }), /missing id/);
+  });
+});
 
 describe("fetchMediaMetadata", () => {
   it("GETs /v25.0/{mediaId} with Bearer and returns url+meta", async () => {

@@ -21,6 +21,32 @@ export interface FetchMediaInput {
   fetch?: typeof fetch;
 }
 
+export interface UploadMediaInput {
+  bytes: Uint8Array;
+  mimeType: string;
+  filename: string;
+  account: CloudAccountConfig;
+  fetch?: typeof fetch;
+}
+
+export async function uploadMedia(input: UploadMediaInput): Promise<{ mediaId: string }> {
+  const form = new FormData();
+  form.set("messaging_product", "whatsapp");
+  form.set("type", input.mimeType);
+  form.set("file", new Blob([new Uint8Array(input.bytes).buffer], { type: input.mimeType }), input.filename);
+  const response = await (input.fetch ?? globalThis.fetch)(
+    `${resolveApiRoot(input.account)}/${encodeURIComponent(input.account.phoneNumberId)}/media`,
+    { method: "POST", headers: { Authorization: `Bearer ${input.account.accessToken}` }, body: form },
+  );
+  if (!response.ok) throw new Error(`whatsapp-cloud media: HTTP ${response.status} uploading media`);
+  const result: unknown = await response.json();
+  if (!result || typeof result !== "object" || !("id" in result)
+    || typeof result.id !== "string" || !result.id) {
+    throw new Error("whatsapp-cloud media: upload response missing id");
+  }
+  return { mediaId: result.id };
+}
+
 /**
  * Resolve a Meta media_id to a fresh download URL + metadata.
  *

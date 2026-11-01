@@ -138,6 +138,18 @@ describe("extractItems", () => {
 });
 
 describe("normalizeItem", () => {
+  it("preserves document filenames, forwarding context, and valid locations", () => {
+    const base = { from: "15551234567", id: "wamid.test", timestamp: "1700000000" };
+    const document = normalizeItem({ message: { ...base, type: "document", document: { id: "m1", filename: "plan.pdf" }, context: { forwarded: true } } }, "default");
+    assert.equal(document?.filename, "plan.pdf");
+    assert.equal(document?.forwarded, true);
+    const location = normalizeItem({ message: { ...base, type: "location", location: { latitude: 0, longitude: 1.5, name: "Office", address: "Main Street" }, context: { frequently_forwarded: true } } }, "default");
+    assert.deepEqual(location?.location, { latitude: 0, longitude: 1.5, name: "Office", address: "Main Street" });
+    assert.equal(location?.forwarded, true);
+    const malformed = normalizeItem({ message: { ...base, type: "location", location: { latitude: "0", longitude: 1.5 }, context: { forwarded: "true" } } }, "default");
+    assert.equal(malformed?.location, undefined);
+    assert.equal(malformed?.forwarded, undefined);
+  });
   it("normalizes a plain text message", () => {
     const { messages } = extractItems(metaInboundEnvelope({ text: "hi there" }));
     const norm = normalizeItem(messages[0], "default");

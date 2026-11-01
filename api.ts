@@ -29,11 +29,12 @@ export {
   WHATSAPP_TEXT_LIMIT,
   META_ERROR_OUTSIDE_SERVICE_WINDOW,
 } from "./src/send.js";
-export { fetchMediaMetadata, downloadMediaBytes } from "./src/media.js";
+export { fetchMediaMetadata, downloadMediaBytes, uploadMedia } from "./src/media.js";
 export type {
   CloudMediaMetadata,
   CloudMediaBytes,
   FetchMediaInput,
+  UploadMediaInput,
 } from "./src/media.js";
 export {
   parseCloudWebhook,

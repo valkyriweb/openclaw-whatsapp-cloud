@@ -274,6 +274,7 @@ export function normalizeItem(
   // Media id + mime live under message.<type>.{id,mime_type} for image/audio/video/document/sticker.
   let mediaId: string | undefined;
   let mediaMimeType: string | undefined;
+  let filename: string | undefined;
   if (type === "image" || type === "audio" || type === "video" || type === "document" || type === "sticker") {
     const typed = m[type];
     if (typed && typeof typed === "object") {
@@ -281,12 +282,14 @@ export function normalizeItem(
       const mime = (typed as { mime_type?: unknown }).mime_type;
       if (typeof id === "string") mediaId = id;
       if (typeof mime === "string") mediaMimeType = mime;
+      const name = (typed as { filename?: unknown }).filename;
+      if (type === "document" && typeof name === "string") filename = name;
     }
   }
 
   // Reply context — Meta uses `context.id` (a wamid).
   let replyToMessageId: string | undefined;
-  const context = m.context as { id?: unknown } | undefined;
+  const context = m.context as { id?: unknown; forwarded?: unknown; frequently_forwarded?: unknown } | undefined;
   if (context && typeof context === "object" && typeof context.id === "string") {
     replyToMessageId = context.id;
   }
@@ -315,6 +318,17 @@ export function normalizeItem(
   if (fromName !== undefined) out.fromName = fromName;
   if (mediaId !== undefined) out.mediaId = mediaId;
   if (mediaMimeType !== undefined) out.mediaMimeType = mediaMimeType;
+  if (filename !== undefined) out.filename = filename;
+  if (context?.forwarded === true || context?.frequently_forwarded === true) out.forwarded = true;
+  if (type === "location" && m.location && typeof m.location === "object") {
+    const location = m.location as Record<string, unknown>;
+    if (typeof location.latitude === "number" && Number.isFinite(location.latitude)
+      && typeof location.longitude === "number" && Number.isFinite(location.longitude)) {
+      out.location = { latitude: location.latitude, longitude: location.longitude };
+      if (typeof location.name === "string") out.location.name = location.name;
+      if (typeof location.address === "string") out.location.address = location.address;
+    }
+  }
   if (replyToMessageId !== undefined) out.replyToMessageId = replyToMessageId;
   return out;
 }
