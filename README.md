@@ -186,3 +186,12 @@ Portions © 2026 Tomas Ward (forked from `openclaw-whatsapp-kapso`, MIT).
 
 - Forked from [`TomasWard1/openclaw-whatsapp-kapso`](https://github.com/TomasWard1/openclaw-whatsapp-kapso) — MIT-licensed Kapso-flavored channel plugin whose scaffold (HMAC verify, LRU dedup, plugin-sdk webhook ingress, channel-runtime dispatch) we kept verbatim.
 - Structural inspiration: [`pfrankov/openclaw-vk`](https://github.com/pfrankov/openclaw-vk) — the reference third-party OpenClaw channel plugin.
+
+### Zod 4 migration for API consumers
+
+The exported `CloudAccountSchema` and `CloudConfigSchema` now use Zod 4. Code
+that handles validation failures should read `error.issues` instead of the
+removed `error.errors`, and should review issue-code handling (for example,
+string-format failures may use `invalid_format`). Consumers that pass these
+schemas to Zod 3-specific integrations must upgrade those integrations or keep
+using the prior plugin version until they are compatible.
